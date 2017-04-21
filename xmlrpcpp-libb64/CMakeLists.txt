@@ -15,6 +15,8 @@ catkin_package(
   CFG_EXTRAS xmlrpcpp-extras.cmake
 )
 
+add_subdirectory(libb64-1.2)
+
 include_directories(include ${catkin_INCLUDE_DIRS})
 link_directories(${catkin_LIBRARY_DIRS})
 
@@ -37,6 +39,8 @@ add_library(xmlrpcpp
 if(WIN32)
   target_link_libraries(xmlrpcpp ws2_32)
 endif()
+
+target_link_libraries(xmlrpcpp b64)
 
 install(DIRECTORY include/${PROJECT_NAME}
   DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION}
