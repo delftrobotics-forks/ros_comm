@@ -1,0 +1,67 @@
+#!/bin/bash
+
+suffixes=("original" "basen" "libb64")
+
+build() {
+	local directory="$1"
+	local build="$2"
+	mkdir -p "$directory"
+	[[ ! -e "$directory/Makefile" ]] && (  cd "$directory" && cmake .. -DCMAKE_BUILD_TYPE=$build )
+	make -C "$directory" -j4
+}
+
+benchmark() {
+	local suffix="$1"
+	local build="$2"
+	local output="results/$suffix-$build.dat"
+
+	[[ -e $output ]] && return
+	echo "Benchmarking $suffix in $build mode."
+	xmlrpcpp-$suffix/$build/devel/lib/xmlrpcpp/benchmark < benchmark-data > "results/$suffix-$build.dat"
+}
+
+if [[ ! -e "benchmark-data" ]]; then
+	echo "Generating benchmark data."
+	benchmark/generate-data > benchmark-data
+fi
+
+for suffix in "${suffixes[@]}"; do
+	echo "Building $suffix in release mode."
+	build "xmlrpcpp-$suffix/release" Release
+
+	echo "Building $suffix in debug mode."
+	build "xmlrpcpp-$suffix/debug" Debug
+done
+
+mkdir -p results
+for suffix in "${suffixes[@]}"; do
+	benchmark "$suffix" release
+	benchmark "$suffix" debug
+done
+
+plot_command() {
+	local label="$1"
+	local build="$2"
+	local column="$3"
+	echo
+	printf 'set output "results/%s-%s.svg"\n' $1 $2
+	echo 'plot \'
+	for suffix in "${suffixes[@]}"; do
+		printf '"results/%s-%s.dat" using 1:%s title "%s" with linespoints, \\\n' $suffix $build $column $suffix
+	done
+}
+
+gnuplot_script() {
+	echo 'set term svg enhanced size 600,400'
+	echo 'set key inside left top vertical Right noreverse enhanced autotitles box linetype -1 linewidth 1.000'
+	echo 'set xlabel "data size [bytes]"'
+	echo 'set ylabel "time [ns]"'
+
+	plot_command encode release 2
+	plot_command decode release 3
+	plot_command encode debug 2
+	plot_command decode debug 3
+}
+
+echo "Making plots."
+gnuplot_script | gnuplot

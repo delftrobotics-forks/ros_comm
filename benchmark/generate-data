@@ -1,11 +1,11 @@
 #!/bin/bash
 
 make_random() {
-	dd if=/dev/urandom bs=$1 count=1 | tr -d "\n\0"
+	dd if=/dev/urandom bs=$1 count=1 status=none | tr -d "\n\0"
 	echo
 }
 
-sizes=(0 1 2 3 4 5 6 7 8 9 10 100 200 300 20000 1000 2000 3000 10000 20000 30000 100000 200000 300000)
+sizes=({0..30} 100 200 300 400 500 1000 2000 3000 10000 20000 30000 100000 200000 300000)
 for size in "${sizes[@]}"; do
 	make_random $size
 done

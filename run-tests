@@ -1,0 +1,18 @@
+#!/bin/bash
+
+suffixes=("original" "basen" "libb64")
+
+run-tests() {
+	local directory="$1"
+	mkdir -p "$directory"
+	[[ ! -e "$directory/Makefile" ]] && ( cd "$directory" && cmake .. -DCMAKE_BUILD_TYPE=$build )
+	make -C "$directory" run_tests
+}
+
+for suffix in "${suffixes[@]}"; do
+	echo "Testing $suffix in release mode."
+	run-tests "xmlrpcpp-$suffix/release" Release
+
+	echo "Testing $suffix in debug mode."
+	run-tests "xmlrpcpp-$suffix/debug" Debug
+done
