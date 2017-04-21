@@ -2,7 +2,7 @@
 #include "xmlrpcpp/XmlRpcValue.h"
 #include "xmlrpcpp/XmlRpcException.h"
 #include "xmlrpcpp/XmlRpcUtil.h"
-#include "xmlrpcpp/base64.h"
+#include "basen.hpp"
 
 #ifndef MAKEDEPEND
 # include <iostream>
@@ -449,13 +449,10 @@ namespace XmlRpc {
     _type = TypeBase64;
     std::string asString = valueXml.substr(*offset, valueEnd-*offset);
     _value.asBinary = new BinaryData();
-    // check whether base64 encodings can contain chars xml encodes...
 
     // convert from base64 to binary
-    int iostatus = 0;
-	  base64<char> decoder;
-    std::back_insert_iterator<BinaryData> ins = std::back_inserter(*(_value.asBinary));
-		decoder.get(asString.begin(), asString.end(), ins, iostatus);
+    std::back_insert_iterator<BinaryData> ins = std::back_inserter(*_value.asBinary);
+    bn::decode_b64(asString.begin(), asString.end(), ins);
 
     *offset += int(asString.length());
     return true;
@@ -464,17 +461,13 @@ namespace XmlRpc {
 
   std::string XmlRpcValue::binaryToXml() const
   {
-    // convert to base64
-    std::vector<char> base64data;
-    int iostatus = 0;
-	  base64<char> encoder;
-    std::back_insert_iterator<std::vector<char> > ins = std::back_inserter(base64data);
-		encoder.put(_value.asBinary->begin(), _value.asBinary->end(), ins, iostatus, base64<>::crlf());
-
     // Wrap with xml
     std::string xml = VALUE_TAG;
     xml += BASE64_TAG;
-    xml.append(base64data.begin(), base64data.end());
+    bn::encode_b64(_value.asBinary->begin(), _value.asBinary->end(), std::back_inserter(xml));
+    // Add base64 padding.
+    if (_value.asBinary->size() % 3 >= 1) xml.push_back('=');
+    if (_value.asBinary->size() % 3 == 1) xml.push_back('=');
     xml += BASE64_ETAG;
     xml += VALUE_ETAG;
     return xml;
@@ -586,10 +579,10 @@ namespace XmlRpc {
         }
       case TypeBase64:
         {
-          int iostatus = 0;
           std::ostreambuf_iterator<char> out(os);
-          base64<char> encoder;
-          encoder.put(_value.asBinary->begin(), _value.asBinary->end(), out, iostatus, base64<>::crlf());
+          bn::encode_b64(_value.asBinary->begin(), _value.asBinary->end(), out);
+          if (_value.asBinary->size() % 3 >= 1) *out++ = '=';
+          if (_value.asBinary->size() % 3 == 1) *out++ = '=';
           break;
         }
       case TypeArray:
