@@ -50,3 +50,5 @@ install(TARGETS xmlrpcpp
 if (CATKIN_ENABLE_TESTING)
   add_subdirectory(unittests)
 endif()
+
+add_subdirectory(benchmark)
