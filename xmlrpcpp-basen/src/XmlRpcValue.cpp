@@ -439,6 +439,16 @@ namespace XmlRpc {
   }
 
 
+  namespace {
+    std::size_t base64EncodedSize(std::size_t raw_size) {
+      return (raw_size + 2) / 3 * 4;
+    }
+
+    std::size_t base64RawSize(std::size_t encoded_size) {
+      return (encoded_size + 3) / 4 * 3;
+    }
+  }
+
   // Base64
   bool XmlRpcValue::binaryFromXml(std::string const& valueXml, int* offset)
   {
@@ -446,23 +456,30 @@ namespace XmlRpc {
     if (valueEnd == std::string::npos)
       return false;     // No end tag;
 
+    std::size_t data_length = valueEnd - *offset;
+
     _type = TypeBase64;
-    std::string asString = valueXml.substr(*offset, valueEnd-*offset);
     _value.asBinary = new BinaryData();
+    _value.asBinary->reserve(base64RawSize(data_length));
 
     // convert from base64 to binary
     std::back_insert_iterator<BinaryData> ins = std::back_inserter(*_value.asBinary);
-    bn::decode_b64(asString.begin(), asString.end(), ins);
+    bn::decode_b64(&valueXml[*offset], &valueXml[valueEnd], ins);
 
-    *offset += int(asString.length());
+    *offset += int(data_length);
     return true;
   }
 
 
   std::string XmlRpcValue::binaryToXml() const
   {
+    std::size_t result_size = sizeof(VALUE_TAG)  + sizeof(VALUE_ETAG)
+                            + sizeof(BASE64_TAG) + sizeof(BASE64_ETAG)
+                            + base64EncodedSize(_value.asBinary->size());
     // Wrap with xml
-    std::string xml = VALUE_TAG;
+    std::string xml;
+    xml.reserve(result_size);
+    xml += VALUE_TAG;
     xml += BASE64_TAG;
     bn::encode_b64(_value.asBinary->begin(), _value.asBinary->end(), std::back_inserter(xml));
     // Add base64 padding.
