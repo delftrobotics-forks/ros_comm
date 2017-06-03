@@ -5,10 +5,15 @@
 #include "xmlrpcpp/XmlRpcSocket.h"
 #include "xmlrpcpp/XmlRpcUtil.h"
 
+#include <cerrno>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <vector>
+
 #ifndef MAKEDEPEND
 
 #if defined(_WINDOWS)
-# include <stdio.h>
 # include <winsock2.h>
 # include <ws2tcpip.h>
 //# pragma lib(WS2_32.lib)
@@ -38,15 +43,11 @@
 #else
 extern "C" {
 # include <unistd.h>
-# include <stdio.h>
 # include <sys/types.h>
 # include <sys/socket.h>
 # include <netinet/in.h>
 # include <netdb.h>
-# include <errno.h>
 # include <fcntl.h>
-# include <string.h>
-# include <stdlib.h>
 # include <arpa/inet.h>
 }
 #endif  // _WINDOWS
@@ -63,8 +64,6 @@ extern "C" {
 
 using namespace XmlRpc;
 
-
-bool XmlRpcSocket::s_use_ipv6_ = false;
 
 #if defined(_WINDOWS)
 
@@ -96,10 +95,10 @@ nonFatalError()
 }
 
 int
-XmlRpcSocket::socket()
+XmlRpcSocket::socket(bool ipv6)
 {
   initWinSock();
-  return (int) ::socket(s_use_ipv6_ ? AF_INET6 : AF_INET, SOCK_STREAM, 0);
+  return (int) ::socket(ipv6 ? AF_INET6 : AF_INET, SOCK_STREAM, 0);
 }
 
 
@@ -140,17 +139,13 @@ XmlRpcSocket::setReuseAddr(int fd)
 
 // Bind to a specified port
 bool
-XmlRpcSocket::bind(int fd, int port)
+XmlRpcSocket::bind(int fd, int port, bool ipv6)
 {
-  sockaddr_storage ss;
-  socklen_t ss_len;
-  memset(&ss, 0, sizeof(ss));
+  sockaddr_storage ss = {};
 
-  if (s_use_ipv6_)
+  if (ipv6)
   {
     sockaddr_in6 *address = (sockaddr_in6 *)&ss;
-    ss_len = sizeof(sockaddr_in6);
-
     address->sin6_family = AF_INET6;
     address->sin6_addr = in6addr_any;
     address->sin6_port = htons((u_short) port);
@@ -158,14 +153,12 @@ XmlRpcSocket::bind(int fd, int port)
   else
   {
     sockaddr_in *address = (sockaddr_in *)&ss;
-    ss_len = sizeof(sockaddr_in);
-
     address->sin_family = AF_INET;
     address->sin_addr.s_addr = htonl(INADDR_ANY);
     address->sin_port = htons((u_short) port);
   }
 
-  return (::bind(fd, (sockaddr*)&ss, ss_len) == 0);
+  return ::bind(fd, (sockaddr*)&ss, sizeof(sockaddr_storage)) == 0;
 }
 
 
@@ -193,84 +186,95 @@ XmlRpcSocket::accept(int fd)
   return (int) ::accept(fd, (struct sockaddr*)&addr, &addrlen);
 }
 
+namespace {
+  sa_family_t resolveTypeToFamilyHint(XmlRpcSocket::ResolveType type)
+  {
+    switch (type) {
+      case XmlRpcSocket::resolve_both: return AF_UNSPEC;
+      case XmlRpcSocket::resolve_ipv4: return AF_INET;
+      case XmlRpcSocket::resolve_ipv6: return AF_INET6;
+    }
+    return AF_UNSPEC;
+  }
 
+  std::vector<sockaddr_storage>
+  resolve(const std::string & host, XmlRpcSocket::ResolveType type)
+  {
+    std::vector<sockaddr_storage> result;
+
+    addrinfo hints = {};
+    hints.ai_family = resolveTypeToFamilyHint(type);
+
+    addrinfo* addr;
+    if (getaddrinfo(host.c_str(), NULL, &hints, &addr) != 0 || !addr) {
+      fprintf(stderr, "Couldn't find an address for [%s]\n", host.c_str());
+      return result;
+    }
+
+    for (addrinfo* it = addr; it; it = it->ai_next) {
+      char buf[128];
+      // TODO IPV6: check if this also works under Windows
+      XmlRpcUtil::log(5, "found host as %s\n", inet_ntop(it->ai_family, (void*)it->ai_addr, buf, sizeof(buf)));
+
+      sockaddr_storage storage = {};
+      memcpy(&storage, it->ai_addr, it->ai_addrlen);
+      result.push_back(storage);
+    }
+
+    freeaddrinfo(addr);
+
+    return result;
+  }
+}
 
 // Connect a socket to a server (from a client)
 bool
-XmlRpcSocket::connect(int fd, std::string& host, int port)
+XmlRpcSocket::connect(int fd, const std::string& host, int port, bool ipv6)
 {
-  sockaddr_storage ss;
-  socklen_t ss_len;
-  memset(&ss, 0, sizeof(ss));
-
-  struct addrinfo* addr;
-  struct addrinfo hints;
-  memset(&hints, 0, sizeof(hints));
-  hints.ai_family = AF_UNSPEC;
-  if (getaddrinfo(host.c_str(), NULL, &hints, &addr) != 0)
-  {
-    fprintf(stderr, "Couldn't find an %s address for [%s]\n", s_use_ipv6_ ? "AF_INET6" : "AF_INET", host.c_str());
-    return false;
-  }
-
-  bool found = false;
-  struct addrinfo* it = addr;
-
-  for (; it; it = it->ai_next)
-  {
-    if (!s_use_ipv6_ && it->ai_family == AF_INET)
-    {
-      sockaddr_in *address = (sockaddr_in *)&ss;
-      ss_len = sizeof(sockaddr_in);
-
-      memcpy(address, it->ai_addr, it->ai_addrlen);
-      address->sin_family = it->ai_family;
-      address->sin_port = htons((u_short) port);
-
-      XmlRpcUtil::log(5, "found host as %s\n", inet_ntoa(address->sin_addr));
-      found = true;
-      break;
-    }
-    if (s_use_ipv6_ && it->ai_family == AF_INET6)
-    {
-      sockaddr_in6 *address = (sockaddr_in6 *)&ss;
-      ss_len = sizeof(sockaddr_in6);
-
-      memcpy(address, it->ai_addr, it->ai_addrlen);
-      address->sin6_family = it->ai_family;
-      address->sin6_port = htons((u_short) port);
-
-      char buf[128];
-      // TODO IPV6: check if this also works under Windows
-      XmlRpcUtil::log(5, "found ipv6 host as %s\n", inet_ntop(AF_INET6, (void*)&(address->sin6_addr), buf, sizeof(buf)));
-      found = true;
-      break;
-    }
-
-  }
-
-  if (!found)
-  {
-    printf("Couldn't find an %s address for [%s]\n", s_use_ipv6_ ? "AF_INET6" : "AF_INET", host.c_str());
-    freeaddrinfo(addr);
-    return false;
-  }
+  std::vector<sockaddr_storage> resolved = resolve(
+    host,
+    ipv6 ? resolve_ipv6 : resolve_ipv4
+  );
 
   // For asynch operation, this will return EWOULDBLOCK (windows) or
   // EINPROGRESS (linux) and we just need to wait for the socket to be writable...
-  int result = ::connect(fd, (sockaddr*)&ss, ss_len);
-  if (result != 0 ) {
-	  int error = getError();
-	  if ( (error != EINPROGRESS) && error != EWOULDBLOCK) { // actually, should probably do a platform check here, EWOULDBLOCK on WIN32 and EINPROGRESS otherwise
-		    printf("::connect error = %d\n", getError());
-	  }
+  for (std::size_t i = 0; i < resolved.size(); ++i) {
+    int result = ::connect(fd, (sockaddr*)&resolved[i], sizeof(sockaddr_storage));
+    if (result == 0)
+      return true;
+
+    char buf[128];
+    inet_ntop(resolved[i].ss_family, (void*)&resolved[i], buf, sizeof(buf));
+    XmlRpcUtil::log(5, "failed to connect to %s:%d (%s)\n", buf, port, getErrorMsg().c_str());
   }
 
-  freeaddrinfo(addr);
-
-  return result == 0 || nonFatalError();
+  return false;
 }
 
+int
+XmlRpcSocket::connect(const std::string& host, int port, ResolveType resolve_type)
+{
+  std::vector<sockaddr_storage> resolved = resolve(host, resolve_type);
+
+  for (std::size_t i = 0; i < resolved.size(); ++i) {
+    int fd = socket(resolved[i].ss_family == AF_INET6);
+    if (fd < 0) {
+      XmlRpcUtil::log(5, "Could not create socket (%s).", XmlRpcSocket::getErrorMsg().c_str());
+      continue;
+    }
+
+    int result = ::connect(fd, (sockaddr*)&resolved[i], sizeof(sockaddr_storage));
+    if (result == 0)
+      return fd;
+
+    char buf[128];
+    inet_ntop(resolved[i].ss_family, (void*)&resolved[i], buf, sizeof(buf));
+    XmlRpcUtil::log(5, "failed to connect to %s:%d (%s)\n", buf, port, getErrorMsg().c_str());
+    close(fd);
+  }
+
+  return -1;
+}
 
 
 // Read available text from the specified socket. Returns false on error.

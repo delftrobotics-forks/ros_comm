@@ -325,7 +325,6 @@ void start()
 
   bool use_ipv6 = (env_ipv6 && strcmp(env_ipv6,"on") == 0);
   TransportTCP::s_use_ipv6_ = use_ipv6;
-  XmlRpc::XmlRpcSocket::s_use_ipv6_ = use_ipv6;
 
 #ifdef _MSC_VER
   if (env_ipv6)

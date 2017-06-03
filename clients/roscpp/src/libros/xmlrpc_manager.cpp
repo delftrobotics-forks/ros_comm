@@ -27,6 +27,7 @@
 
 #include "ros/xmlrpc_manager.h"
 #include "ros/network.h"
+#include "ros/transport/transport_tcp.h"
 #include "ros/param.h"
 #include "ros/assert.h"
 #include "ros/common.h"
@@ -129,7 +130,7 @@ void XMLRPCManager::start()
   port_ = 0;
   bind("getPid", getPid);
 
-  bool bound = server_.bindAndListen(0);
+  bool bound = server_.bindAndListen(0, TransportTCP::s_use_ipv6_);
   (void) bound;
   ROS_ASSERT(bound);
   port_ = server_.get_port();

@@ -23,10 +23,8 @@ namespace XmlRpc {
   class XMLRPCPP_DECL XmlRpcSocket {
   public:
 
-    static bool s_use_ipv6_;
-
     //! Creates a stream (TCP) socket. Returns -1 on failure.
-    static int socket();
+    static int socket(bool ipv6);
 
     //! Closes a socket.
     static void close(int socket);
@@ -49,8 +47,8 @@ namespace XmlRpc {
     static bool setReuseAddr(int socket);
 
     //! Bind to a specified port
-    static bool bind(int socket, int port);
-    
+    static bool bind(int socket, int port, bool ipv6);
+
     static int get_port(int socket);
 
     //! Set socket in listen mode
@@ -59,10 +57,24 @@ namespace XmlRpc {
     //! Accept a client connection request
     static int accept(int socket);
 
+    //! When resolving a hostname, return IPv4 or IPv6 addresses, or both.
+    enum ResolveType {
+      resolve_both = 0,
+      resolve_ipv4,
+      resolve_ipv6
+    };
 
 
     //! Connect a socket to a server (from a client)
-    static bool connect(int socket, std::string& host, int port);
+    static bool connect(int socket, const std::string& host, int port, bool ipv6);
+
+    //! Create a new socket and connect it to a server.
+    /**
+     * This overload attempts to connect to each resolved address in turn,
+     * returning the file descriptor of the first socket that connected
+     * successfully, or -1 on failure.
+     */
+    static int connect(const std::string& host, int port, ResolveType resolve_type);
 
 
     //! Returns last errno

@@ -58,7 +58,7 @@ namespace XmlRpc {
 
     //! Create a socket, bind to the specified port, and
     //! set it in listen mode to make it available for clients.
-    bool bindAndListen(int port, int backlog = 5);
+    bool bindAndListen(int port, int backlog = 5, bool ipv6 = false);
 
     //! Process client requests for the specified time
     void work(double msTime);

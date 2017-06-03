@@ -217,28 +217,19 @@ XmlRpcClient::setupConnection()
 bool
 XmlRpcClient::doConnect()
 {
-  int fd = XmlRpcSocket::socket();
+  int fd = XmlRpcSocket::connect(_host, _port, XmlRpcSocket::resolve_both);
   if (fd < 0)
   {
-    XmlRpcUtil::error("Error in XmlRpcClient::doConnect: Could not create socket (%s).", XmlRpcSocket::getErrorMsg().c_str());
+    XmlRpcUtil::error("Error in XmlRpcClient::doConnect: Could not connect to %s:%d (%s).", _host, _port, XmlRpcSocket::getErrorMsg().c_str());
     return false;
   }
-
-  XmlRpcUtil::log(3, "XmlRpcClient::doConnect: fd %d.", fd);
   this->setfd(fd);
 
-  // Don't block on connect/reads/writes
-  if ( ! XmlRpcSocket::setNonBlocking(fd))
+  // Don't block on reads/writes
+  if (!XmlRpcSocket::setNonBlocking(fd))
   {
     this->close();
     XmlRpcUtil::error("Error in XmlRpcClient::doConnect: Could not set socket to non-blocking IO mode (%s).", XmlRpcSocket::getErrorMsg().c_str());
-    return false;
-  }
-
-  if ( ! XmlRpcSocket::connect(fd, _host, _port))
-  {
-    this->close();
-    XmlRpcUtil::error("Error in XmlRpcClient::doConnect: Could not connect to server (%s).", XmlRpcSocket::getErrorMsg().c_str());
     return false;
   }
 
