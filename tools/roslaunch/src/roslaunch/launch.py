@@ -46,9 +46,12 @@ import sys
 import time
 import traceback
 
+import sdnotify
+notifier = sdnotify.SystemdNotifier()
+
 import rosgraph
 import rosgraph.names
-import rosgraph.network 
+import rosgraph.network
 
 from roslaunch.core import *
 #from roslaunch.core import setup_env
@@ -510,7 +513,9 @@ class ROSLaunchRunner(object):
             else:
                 print("WARN: master is not behaving well (unexpected return value when looking up node)", file=sys.stderr)
                 self.logger.error("ERROR: master return [%s][%s] on lookupNode call"%(code,msg))
-                
+
+        notifier.notify('STATUS=starting nodes')
+
         for node in tolaunch:
             node_name = rosgraph.names.ns_join(node.namespace, node.name)
             name, success = self.launch_node(node, core=True)
@@ -518,6 +523,8 @@ class ROSLaunchRunner(object):
                 print("started core service [%s]" % node_name)
             else:
                 raise RLException("failed to start core service [%s]"%node_name)
+
+        notifier.notify('READY=1')
 
     def launch_node(self, node, core=False):
         """
