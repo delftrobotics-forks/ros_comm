@@ -36,10 +36,12 @@
 #include "ros/topic_manager.h"
 #include "ros/file_log.h"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 namespace ros
 {
+
+using namespace boost::placeholders;
 
 TransportSubscriberLink::TransportSubscriberLink()
 : writing_message_(false)

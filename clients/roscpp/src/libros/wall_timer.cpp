@@ -31,6 +31,8 @@
 namespace ros
 {
 
+using namespace boost::placeholders;
+
 WallTimer::Impl::Impl()
   : started_(false)
   , timer_handle_(-1)

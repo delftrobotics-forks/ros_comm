@@ -51,6 +51,8 @@
 namespace ros
 {
 
+using namespace boost::placeholders;
+
 boost::mutex g_nh_refcount_mutex;
 int32_t g_nh_refcount = 0;
 bool g_node_started_by_nh = false;

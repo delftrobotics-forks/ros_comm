@@ -32,7 +32,7 @@
 #include "ros/common.h"
 #include "ros/message.h"
 #include "ros/serialization.h"
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 namespace ros
 {

@@ -48,12 +48,14 @@
 #include "ros/callback_queue.h"
 #include "ros/internal_timer_manager.h"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <sstream>
 
 namespace ros
 {
+
+using namespace boost::placeholders;
 
 TransportPublisherLink::TransportPublisherLink(const SubscriptionPtr& parent, const std::string& xmlrpc_uri, const TransportHints& transport_hints)
 : PublisherLink(parent, xmlrpc_uri, transport_hints)

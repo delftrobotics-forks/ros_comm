@@ -39,12 +39,14 @@
 
 #include <ros/assert.h>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <fcntl.h>
 
 namespace ros
 {
+
+using namespace boost::placeholders;
 
 PollSet::PollSet()
     : sockets_changed_(false), epfd_(create_socket_watcher())

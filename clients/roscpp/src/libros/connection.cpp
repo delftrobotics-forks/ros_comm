@@ -39,10 +39,12 @@
 #include <ros/assert.h>
 
 #include <boost/shared_array.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 namespace ros
 {
+
+using namespace boost::placeholders;
 
 Connection::Connection()
 : is_server_(false)

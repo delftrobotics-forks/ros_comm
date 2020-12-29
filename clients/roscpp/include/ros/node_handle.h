@@ -47,13 +47,12 @@
 #include "ros/init.h"
 #include "common.h"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <xmlrpcpp/XmlRpcValue.h>
 
 namespace ros
 {
-
   class NodeHandleBackingCollection;
 
   /**
@@ -281,7 +280,7 @@ namespace ros
 
      MyClass my_class;
      ros::Publisher pub = handle.advertise<std_msgs::Empty>("my_topic", 1, 
-                                                            boost::bind(&MyClass::connectCallback, my_class, _1));
+                                                            boost::bind(&MyClass::connectCallback, my_class, boost::placeholders::_1));
      \endverbatim
      *
    *
@@ -403,7 +402,7 @@ if (sub)  // Enter if subscriber is valid
                        const TransportHints& transport_hints = TransportHints())
   {
     SubscribeOptions ops;
-    ops.template initByFullCallbackType<M>(topic, queue_size, boost::bind(fp, obj, _1));
+    ops.template initByFullCallbackType<M>(topic, queue_size, boost::bind(fp, obj, boost::placeholders::_1));
     ops.transport_hints = transport_hints;
     return subscribe(ops);
   }
@@ -414,7 +413,7 @@ if (sub)  // Enter if subscriber is valid
                        const TransportHints& transport_hints = TransportHints())
   {
     SubscribeOptions ops;
-    ops.template initByFullCallbackType<M>(topic, queue_size, boost::bind(fp, obj, _1));
+    ops.template initByFullCallbackType<M>(topic, queue_size, boost::bind(fp, obj, boost::placeholders::_1));
     ops.transport_hints = transport_hints;
     return subscribe(ops);
   }
@@ -467,7 +466,7 @@ if (sub)  // Enter if subscriber is valid
                        const TransportHints& transport_hints = TransportHints())
   {
     SubscribeOptions ops;
-    ops.template init<M>(topic, queue_size, boost::bind(fp, obj, _1));
+    ops.template init<M>(topic, queue_size, boost::bind(fp, obj, boost::placeholders::_1));
     ops.transport_hints = transport_hints;
     return subscribe(ops);
   }
@@ -477,7 +476,7 @@ if (sub)  // Enter if subscriber is valid
                        const TransportHints& transport_hints = TransportHints())
   {
     SubscribeOptions ops;
-    ops.template init<M>(topic, queue_size, boost::bind(fp, obj, _1));
+    ops.template init<M>(topic, queue_size, boost::bind(fp, obj, boost::placeholders::_1));
     ops.transport_hints = transport_hints;
     return subscribe(ops);
   }
@@ -530,7 +529,7 @@ if (sub)  // Enter if subscriber is valid
                        const boost::shared_ptr<T>& obj, const TransportHints& transport_hints = TransportHints())
   {
     SubscribeOptions ops;
-    ops.template initByFullCallbackType<M>(topic, queue_size, boost::bind(fp, obj.get(), _1));
+    ops.template initByFullCallbackType<M>(topic, queue_size, boost::bind(fp, obj.get(), boost::placeholders::_1));
     ops.tracked_object = obj;
     ops.transport_hints = transport_hints;
     return subscribe(ops);
@@ -541,7 +540,7 @@ if (sub)  // Enter if subscriber is valid
                        const boost::shared_ptr<T>& obj, const TransportHints& transport_hints = TransportHints())
   {
     SubscribeOptions ops;
-    ops.template initByFullCallbackType<M>(topic, queue_size, boost::bind(fp, obj.get(), _1));
+    ops.template initByFullCallbackType<M>(topic, queue_size, boost::bind(fp, obj.get(), boost::placeholders::_1));
     ops.tracked_object = obj;
     ops.transport_hints = transport_hints;
     return subscribe(ops);
@@ -596,7 +595,7 @@ if (sub)  // Enter if subscriber is valid
                        const boost::shared_ptr<T>& obj, const TransportHints& transport_hints = TransportHints())
   {
     SubscribeOptions ops;
-    ops.template init<M>(topic, queue_size, boost::bind(fp, obj.get(), _1));
+    ops.template init<M>(topic, queue_size, boost::bind(fp, obj.get(), boost::placeholders::_1));
     ops.tracked_object = obj;
     ops.transport_hints = transport_hints;
     return subscribe(ops);
@@ -607,7 +606,7 @@ if (sub)  // Enter if subscriber is valid
                        const boost::shared_ptr<T>& obj, const TransportHints& transport_hints = TransportHints())
   {
     SubscribeOptions ops;
-    ops.template init<M>(topic, queue_size, boost::bind(fp, obj.get(), _1));
+    ops.template init<M>(topic, queue_size, boost::bind(fp, obj.get(), boost::placeholders::_1));
     ops.tracked_object = obj;
     ops.transport_hints = transport_hints;
     return subscribe(ops);
@@ -879,7 +878,7 @@ if (service)  // Enter if advertised service is valid
   ServiceServer advertiseService(const std::string& service, bool(T::*srv_func)(MReq &, MRes &), T *obj)
   {
     AdvertiseServiceOptions ops;
-    ops.template init<MReq, MRes>(service, boost::bind(srv_func, obj, _1, _2));
+    ops.template init<MReq, MRes>(service, boost::bind(srv_func, obj, boost::placeholders::_1, boost::placeholders::_2));
     return advertiseService(ops);
   }
 
@@ -924,7 +923,7 @@ if (service)  // Enter if advertised service is valid
   ServiceServer advertiseService(const std::string& service, bool(T::*srv_func)(ServiceEvent<MReq, MRes>&), T *obj)
   {
     AdvertiseServiceOptions ops;
-    ops.template initBySpecType<ServiceEvent<MReq, MRes> >(service, boost::bind(srv_func, obj, _1));
+    ops.template initBySpecType<ServiceEvent<MReq, MRes> >(service, boost::bind(srv_func, obj, boost::placeholders::_1));
     return advertiseService(ops);
   }
 
@@ -970,7 +969,7 @@ if (service)  // Enter if advertised service is valid
   ServiceServer advertiseService(const std::string& service, bool(T::*srv_func)(MReq &, MRes &), const boost::shared_ptr<T>& obj)
   {
     AdvertiseServiceOptions ops;
-    ops.template init<MReq, MRes>(service, boost::bind(srv_func, obj.get(), _1, _2));
+    ops.template init<MReq, MRes>(service, boost::bind(srv_func, obj.get(), boost::placeholders::_1, boost::placeholders::_2));
     ops.tracked_object = obj;
     return advertiseService(ops);
   }
@@ -1017,7 +1016,7 @@ if (service)  // Enter if advertised service is valid
   ServiceServer advertiseService(const std::string& service, bool(T::*srv_func)(ServiceEvent<MReq, MRes>&), const boost::shared_ptr<T>& obj)
   {
     AdvertiseServiceOptions ops;
-    ops.template initBySpecType<ServiceEvent<MReq, MRes> >(service, boost::bind(srv_func, obj.get(), _1));
+    ops.template initBySpecType<ServiceEvent<MReq, MRes> >(service, boost::bind(srv_func, obj.get(), boost::placeholders::_1));
     ops.tracked_object = obj;
     return advertiseService(ops);
   }
@@ -1313,7 +1312,7 @@ if (service)  // Enter if advertised service is valid
   Timer createTimer(Duration period, void(T::*callback)(const TimerEvent&) const, T* obj, 
                     bool oneshot = false, bool autostart = true) const
   {
-    return createTimer(period, boost::bind(callback, obj, _1), oneshot, autostart);
+    return createTimer(period, boost::bind(callback, obj, boost::placeholders::_1), oneshot, autostart);
   }
 
   /**
@@ -1333,7 +1332,7 @@ if (service)  // Enter if advertised service is valid
   Timer createTimer(Duration period, void(T::*callback)(const TimerEvent&), T* obj, 
                     bool oneshot = false, bool autostart = true) const
   {
-    return createTimer(period, boost::bind(callback, obj, _1), oneshot, autostart);
+    return createTimer(period, boost::bind(callback, obj, boost::placeholders::_1), oneshot, autostart);
   }
 
   /**
@@ -1355,7 +1354,7 @@ if (service)  // Enter if advertised service is valid
   Timer createTimer(Duration period, void(T::*callback)(const TimerEvent&), const boost::shared_ptr<T>& obj, 
                     bool oneshot = false, bool autostart = true) const
   {
-    TimerOptions ops(period, boost::bind(callback, obj.get(), _1), 0);
+    TimerOptions ops(period, boost::bind(callback, obj.get(), boost::placeholders::_1), 0);
     ops.tracked_object = obj;
     ops.oneshot = oneshot;
     ops.autostart = autostart;
@@ -1410,7 +1409,7 @@ if (service)  // Enter if advertised service is valid
   WallTimer createWallTimer(WallDuration period, void(T::*callback)(const WallTimerEvent&), T* obj, 
                             bool oneshot = false, bool autostart = true) const
   {
-    return createWallTimer(period, boost::bind(callback, obj, _1), oneshot, autostart);
+    return createWallTimer(period, boost::bind(callback, obj, boost::placeholders::_1), oneshot, autostart);
   }
 
   /**
@@ -1433,7 +1432,7 @@ if (service)  // Enter if advertised service is valid
                             const boost::shared_ptr<T>& obj, 
                             bool oneshot = false, bool autostart = true) const
   {
-    WallTimerOptions ops(period, boost::bind(callback, obj.get(), _1), 0);
+    WallTimerOptions ops(period, boost::bind(callback, obj.get(), boost::placeholders::_1), 0);
     ops.tracked_object = obj;
     ops.oneshot = oneshot;
     ops.autostart = autostart;
@@ -1489,7 +1488,7 @@ if (service)  // Enter if advertised service is valid
   SteadyTimer createSteadyTimer(WallDuration period, void(T::*callback)(const SteadyTimerEvent&), T* obj,
                                 bool oneshot = false, bool autostart = true) const
   {
-    return createSteadyTimer(period, boost::bind(callback, obj, _1), oneshot, autostart);
+    return createSteadyTimer(period, boost::bind(callback, obj, boost::placeholders::_1), oneshot, autostart);
   }
 
   /**
@@ -1512,7 +1511,7 @@ if (service)  // Enter if advertised service is valid
                                 const boost::shared_ptr<T>& obj,
                                 bool oneshot = false, bool autostart = true) const
   {
-    SteadyTimerOptions ops(period, boost::bind(callback, obj.get(), _1), 0);
+    SteadyTimerOptions ops(period, boost::bind(callback, obj.get(), boost::placeholders::_1), 0);
     ops.tracked_object = obj;
     ops.oneshot = oneshot;
     ops.autostart = autostart;

@@ -39,7 +39,7 @@
 #include "ros/file_log.h"
 #include <ros/assert.h>
 #include <sstream>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <fcntl.h>
 #include <errno.h>
 #ifndef _WIN32
@@ -47,6 +47,8 @@
 #endif
 namespace ros
 {
+
+using namespace boost::placeholders;
 
 bool TransportTCP::s_use_keepalive_ = true;
 bool TransportTCP::s_use_ipv6_ = false;

@@ -53,6 +53,8 @@ using namespace std; // sigh
 namespace ros
 {
 
+using namespace boost::placeholders;
+
 const TopicManagerPtr& TopicManager::instance()
 {
   static TopicManagerPtr topic_manager = boost::make_shared<TopicManager>();

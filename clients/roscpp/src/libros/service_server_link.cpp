@@ -40,12 +40,14 @@
 #include "ros/this_node.h"
 #include "ros/file_log.h"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <sstream>
 
 namespace ros
 {
+
+using namespace boost::placeholders;
 
 ServiceServerLink::ServiceServerLink(const std::string& service_name, bool persistent, const std::string& request_md5sum,
                              const std::string& response_md5sum, const M_string& header_values)

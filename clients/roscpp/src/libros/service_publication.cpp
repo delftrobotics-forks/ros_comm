@@ -37,8 +37,6 @@
 #include "ros/connection.h"
 #include "ros/callback_queue_interface.h"
 
-#include <boost/bind.hpp>
-
 #include <std_msgs/String.h>
 
 namespace ros

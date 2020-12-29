@@ -37,8 +37,12 @@
 
 #include <ros/assert.h>
 
+#include <boost/bind/bind.hpp>
+
 namespace ros
 {
+
+using namespace boost::placeholders;
 
 const ConnectionManagerPtr& ConnectionManager::instance()
 {

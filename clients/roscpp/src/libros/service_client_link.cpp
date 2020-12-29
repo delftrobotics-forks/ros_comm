@@ -41,10 +41,12 @@
 #include "ros/this_node.h"
 #include "ros/file_log.h"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 namespace ros
 {
+
+using namespace boost::placeholders;
 
 ServiceClientLink::ServiceClientLink()
 : persistent_(false)

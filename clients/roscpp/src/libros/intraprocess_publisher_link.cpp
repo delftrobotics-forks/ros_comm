@@ -42,8 +42,6 @@
 #include "ros/connection_manager.h"
 #include "ros/file_log.h"
 
-#include <boost/bind.hpp>
-
 #include <sstream>
 
 namespace ros
