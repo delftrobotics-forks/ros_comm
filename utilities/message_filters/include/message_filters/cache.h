@@ -36,8 +36,9 @@
 #define MESSAGE_FILTERS_CACHE_H_
 
 #include <deque>
-#include "boost/thread.hpp"
-#include "boost/shared_ptr.hpp"
+#include <boost/bind/bind.hpp>
+#include <boost/thread.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include "ros/time.h"
 
@@ -89,7 +90,7 @@ public:
   template<class F>
   void connectInput(F& f)
   {
-    incoming_connection_ = f.registerCallback(typename SimpleFilter<M>::EventCallback(boost::bind(&Cache::callback, this, _1)));
+    incoming_connection_ = f.registerCallback(typename SimpleFilter<M>::EventCallback(boost::bind(&Cache::callback, this, boost::placeholders::_1)));
   }
 
   ~Cache()

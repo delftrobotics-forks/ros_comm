@@ -42,6 +42,8 @@
 
 #include <rosgraph_msgs/Log.h>
 
+#include <boost/bind/bind.hpp>
+
 namespace ros
 {
 

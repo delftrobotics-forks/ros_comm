@@ -37,6 +37,8 @@
 
 #include "simple_filter.h"
 
+#include <boost/bind/bind.hpp>
+
 #include <vector>
 
 namespace message_filters
@@ -65,7 +67,7 @@ public:
   void connectInput(F& f)
   {
     incoming_connection_.disconnect();
-    incoming_connection_ = f.registerCallback(typename SimpleFilter<M>::EventCallback(boost::bind(&PassThrough::cb, this, _1)));
+    incoming_connection_ = f.registerCallback(typename SimpleFilter<M>::EventCallback(boost::bind(&PassThrough::cb, this, boost::placeholders::_1)));
   }
 
   void add(const MConstPtr& msg)

@@ -42,6 +42,8 @@
 #include "topic_tools/shape_shifter.h"
 #include "topic_tools/parse.h"
 
+#include <boost/bind/bind.hpp>
+
 using std::string;
 using std::vector;
 using std::list;

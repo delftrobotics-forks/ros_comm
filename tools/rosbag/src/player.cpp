@@ -40,6 +40,7 @@
   #include <sys/select.h>
 #endif
 
+#include <boost/bind/bind.hpp>
 #include <boost/format.hpp>
 
 #include "rosgraph_msgs/Clock.h"
@@ -212,7 +213,7 @@ void Player::publish() {
         ops.datatype = ros::message_traits::datatype<topic_tools::ShapeShifter>();
         ops.helper = boost::make_shared<ros::SubscriptionCallbackHelperT<
             const ros::MessageEvent<topic_tools::ShapeShifter const> &> >(
-                boost::bind(&Player::updateRateTopicTime, this, _1));
+                boost::bind(&Player::updateRateTopicTime, this, boost::placeholders::_1));
 
         rate_control_sub_ = node_handle_.subscribe(ops);
 

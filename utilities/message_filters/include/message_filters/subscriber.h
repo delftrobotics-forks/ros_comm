@@ -37,6 +37,7 @@
 
 #include <ros/ros.h>
 
+#include <boost/bind/bind.hpp>
 #include <boost/thread/mutex.hpp>
 
 #include "connection.h"
@@ -143,7 +144,7 @@ public:
 
     if (!topic.empty())
     {
-      ops_.template initByFullCallbackType<const EventType&>(topic, queue_size, boost::bind(&Subscriber<M>::cb, this, _1));
+      ops_.template initByFullCallbackType<const EventType&>(topic, queue_size, boost::bind(&Subscriber<M>::cb, this, boost::placeholders::_1));
       ops_.callback_queue = callback_queue;
       ops_.transport_hints = transport_hints;
       sub_ = nh.subscribe(ops_);

@@ -33,6 +33,8 @@
 #include "ros/file_log.h"
 #include "ros/io.h"
 
+#include <boost/bind/bind.hpp>
+
 using namespace XmlRpc;
 
 namespace ros

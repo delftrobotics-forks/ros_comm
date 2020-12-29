@@ -35,6 +35,7 @@
 #ifndef MESSAGE_FILTERS_SIMPLE_FILTER_H
 #define MESSAGE_FILTERS_SIMPLE_FILTER_H
 
+#include <boost/bind/bind.hpp>
 #include <boost/noncopyable.hpp>
 
 #include "connection.h"
@@ -93,7 +94,7 @@ public:
   template<typename P>
   Connection registerCallback(void(*callback)(P))
   {
-    typename CallbackHelper1<M>::Ptr helper = signal_.template addCallback<P>(boost::bind(callback, _1));
+    typename CallbackHelper1<M>::Ptr helper = signal_.template addCallback<P>(boost::bind(callback, boost::placeholders::_1));
     return Connection(boost::bind(&Signal::removeCallback, &signal_, helper));
   }
 
@@ -104,7 +105,7 @@ public:
   template<typename T, typename P>
   Connection registerCallback(void(T::*callback)(P), T* t)
   {
-    typename CallbackHelper1<M>::Ptr helper = signal_.template addCallback<P>(boost::bind(callback, t, _1));
+    typename CallbackHelper1<M>::Ptr helper = signal_.template addCallback<P>(boost::bind(callback, t, boost::placeholders::_1));
     return Connection(boost::bind(&Signal::removeCallback, &signal_, helper));
   }
 
